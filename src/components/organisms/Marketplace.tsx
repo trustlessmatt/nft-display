@@ -10,6 +10,7 @@ const Marketplace = () => {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [page, setPage] = useState<number>(0);
   const [searchParams, setSearchParams] = useState<string | null>(null);
+  const [limitReached, setLimitReached] = useState<boolean>(false);
 
   // fixed query batch limit
   const limit = 20;
@@ -33,9 +34,12 @@ const Marketplace = () => {
             offset: pg * limit,
           },
         });
-
-        // console.log("response: ", res.data.results);
-        setCollection((prev) => [...prev, ...res.data.results]);
+        console.log("response: ", res.data.results);
+        if (res.data.results.length === 0) {
+          setLimitReached(true);
+        } else {
+          setCollection((prev) => [...prev, ...res.data.results]);
+        }
       } catch (error) {
         console.log("error fetching API: ", error);
 
@@ -63,7 +67,7 @@ const Marketplace = () => {
   useEffect(() => {
     // fetch new page of data each time bottom of component is reached
     const onScroll = () => {
-      if (isScrollBottom && !isLoading) {
+      if (isScrollBottom && !isLoading && !limitReached) {
         setPage((prev) => prev + 1);
         fetchMarketplace(page + 1);
       }
@@ -93,6 +97,11 @@ const Marketplace = () => {
             <Card data={item} key={index} />
           ))}
       </div>
+      {limitReached && (
+        <p className="py-6 flex justify-center items-center">
+          No more NFTs to show!
+        </p>
+      )}
     </div>
   );
 };
